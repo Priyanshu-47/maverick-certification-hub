@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    --background: 241 245 249;
+    --foreground: 15 23 42;
+    --card: 255 255 255;
+    --border: 226 232 240;
+    --primary: 30 58 95;
+    --primary-dark: 15 35 62;
+    --sidebar: 15 35 62;
+    --primary-foreground: 255 255 255;
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+    --success: 5 150 105;
+    --warning: 217 119 6;
+    --danger: 220 38 38;
+    --accent: 99 102 241;
+  }
+  * { border-color: rgb(var(--border)); }
+  body {
+    background: rgb(var(--background));
+    color: rgb(var(--foreground));
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .card-shadow {
+    box-shadow: 0 1px 3px 0 rgb(15 23 42 / 0.04), 0 4px 16px -2px rgb(15 23 42 / 0.06);
+  }
+  .card-shadow-lg {
+    box-shadow: 0 8px 30px -4px rgb(15 23 42 / 0.1), 0 2px 8px -2px rgb(15 23 42 / 0.06);
+  }
+  .hero-gradient {
+    background: linear-gradient(135deg, rgb(15 35 62) 0%, rgb(30 58 95) 45%, rgb(45 85 135) 100%);
+  }
+  .mesh-bg {
+    background-color: rgb(241 245 249);
+    background-image:
+      radial-gradient(at 0% 0%, rgb(30 58 95 / 0.06) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgb(99 102 241 / 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgb(5 150 105 / 0.04) 0px, transparent 50%);
+  }
+  .metric-glow-success { box-shadow: 0 4px 20px -4px rgb(5 150 105 / 0.25); }
+  .metric-glow-warning { box-shadow: 0 4px 20px -4px rgb(217 119 6 / 0.25); }
+  .metric-glow-danger { box-shadow: 0 4px 20px -4px rgb(220 38 38 / 0.2); }
+}

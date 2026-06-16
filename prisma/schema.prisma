@@ -1,0 +1,560 @@
+// Maverick Certification Hub — PostgreSQL schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  Admin
+  Coordinator
+  Approver
+  ReadOnly
+  Candidate
+}
+
+enum DriveStatus {
+  Draft
+  Published
+  Active
+  Closed
+  Archived
+}
+
+enum ApprovalPolicy {
+  None
+  ManagerOnly
+  ManagerAndLD
+}
+
+enum RegistrationStatus {
+  Submitted
+  Acknowledged
+  EligibilityPending
+  Eligible
+  NotEligible
+  ApprovalPending
+  Approved
+  Rejected
+  Scheduled
+  Attended
+  Passed
+  Failed
+  VoucherIssued
+  VoucherRedeemed
+  Closed
+}
+
+enum EligibilityOutcome {
+  Eligible
+  NotEligible
+  ApprovalRequired
+  ExceptionReview
+}
+
+enum ApprovalStatus {
+  Pending
+  Approved
+  Rejected
+  Escalated
+}
+
+enum AttendanceStatus {
+  Scheduled
+  Attended
+  NoShow
+}
+
+enum AssessmentOutcome {
+  Pending
+  Passed
+  Failed
+}
+
+enum VoucherStatus {
+  Available
+  Reserved
+  Issued
+  Redeemed
+  Revoked
+  Expired
+}
+
+enum CommunicationStatus {
+  Queued
+  Sent
+  Failed
+  Retried
+}
+
+enum CommunicationTemplate {
+  RegistrationAcknowledgement
+  EligibilityApproved
+  EligibilityRejected
+  ApprovalRequest
+  AssessmentScheduled
+  ResultPassed
+  ResultFailed
+  VoucherIssued
+  VoucherReminderT30
+  VoucherReminderT7
+  VoucherReminderT3
+  SupportStatus
+  SupportHelp
+  SupportReschedule
+}
+
+enum ExceptionType {
+  DuplicateRegistration
+  NotEligible
+  ApprovalOverdue
+  VoucherUnavailable
+  VoucherExpiryRisk
+  CommunicationFailed
+  SLABreached
+  ResultImportError
+}
+
+enum ExceptionSeverity {
+  Low
+  Medium
+  High
+  Critical
+}
+
+enum ExceptionStatus {
+  Open
+  InProgress
+  Resolved
+  Waived
+}
+
+enum AutomationRunStatus {
+  Running
+  Completed
+  Failed
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      UserRole @default(Candidate)
+  employeeId String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownedDrives       Drive[]            @relation("DriveOwner")
+  createdDrives     Drive[]            @relation("DriveCreator")
+  registrations     Registration[]
+  approvals         Approval[]
+  assessmentResults AssessmentResult[]
+  auditLogs         AuditLog[]
+  exceptions        ExceptionRecord[]  @relation("ExceptionOwner")
+}
+
+model Drive {
+  id                   String         @id @default(cuid())
+  driveCode            String         @unique
+  name                 String
+  sponsor              String
+  ownerId              String
+  owner                User           @relation("DriveOwner", fields: [ownerId], references: [id])
+  budget               Float
+  budgetConsumed       Float          @default(0)
+  startDate            DateTime
+  endDate              DateTime
+  registrationDeadline DateTime
+  targetCount          Int
+  policyUrl            String?
+  status               DriveStatus    @default(Draft)
+  tracks               String[]
+  locations            String[]
+  tenureThreshold      Int            @default(90)
+  trainingRequired     Boolean        @default(true)
+  maxPriorAttempts     Int            @default(2)
+  managerApproval      ApprovalPolicy @default(ManagerOnly)
+  passThreshold        Int            @default(70)
+  createdById          String
+  createdBy            User           @relation("DriveCreator", fields: [createdById], references: [id])
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  repositoryFolders RepositoryFolder[]
+  registrations     Registration[]
+  vouchers          Voucher[]
+  communications    Communication[]
+  exceptions        ExceptionRecord[]
+  automationRuns    AutomationRun[]
+  policyRules       PolicyRule[]
+
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+model RepositoryFolder {
+  id        String   @id @default(cuid())
+  driveId   String
+  drive     Drive    @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  name      String
+  path      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([driveId, path])
+  @@index([driveId])
+}
+
+model Registration {
+  id                      String             @id @default(cuid())
+  registrationCode        String             @unique
+  driveId                 String
+  drive                   Drive              @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  userId                  String?
+  user                    User?              @relation(fields: [userId], references: [id])
+  employeeId              String
+  candidateName           String
+  email                   String
+  businessUnit            String
+  location                String
+  managerEmail            String
+  examTrack               String
+  preferredSlot           String?
+  priorAttempts           Int                @default(0)
+  trainingCompleted       Boolean            @default(false)
+  tenureDays              Int                @default(0)
+  status                  RegistrationStatus @default(Submitted)
+  submittedAt             DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+
+  eligibilityDecision EligibilityDecision?
+  approvals           Approval[]
+  assessmentResults   AssessmentResult[]
+  vouchers            Voucher[]
+  communications      Communication[]
+  exceptions          ExceptionRecord[]
+  readinessAssessment ReadinessAssessment?
+  voucherScores       VoucherScore[]
+  passport            CertificationPassport?
+  roiMetrics          ROIMetric[]
+
+  @@unique([driveId, employeeId])
+  @@index([driveId])
+  @@index([status])
+  @@index([employeeId])
+}
+
+model EligibilityDecision {
+  id             String             @id @default(cuid())
+  registrationId String             @unique
+  registration   Registration       @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  outcome        EligibilityOutcome
+  criteriaJson   Json
+  evaluatedAt    DateTime           @default(now())
+  evaluatedBy    String?
+
+  @@index([outcome])
+}
+
+model Approval {
+  id             String         @id @default(cuid())
+  registrationId String
+  registration   Registration   @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  driveId        String
+  level          Int            @default(1)
+  approverId     String?
+  approver       User?          @relation(fields: [approverId], references: [id])
+  approverEmail  String
+  status         ApprovalStatus @default(Pending)
+  comments       String?
+  requestedAt    DateTime       @default(now())
+  respondedAt    DateTime?
+  slaDueAt       DateTime
+
+  @@index([status])
+  @@index([registrationId])
+  @@index([approverEmail])
+}
+
+model AssessmentResult {
+  id             String            @id @default(cuid())
+  registrationId String
+  registration   Registration      @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  driveId        String
+  assessmentDate DateTime?
+  slot           String?
+  attendance     AttendanceStatus  @default(Scheduled)
+  score          Int?
+  outcome        AssessmentOutcome @default(Pending)
+  evidenceUrl    String?
+  uploadedById   String?
+  uploadedBy     User?             @relation(fields: [uploadedById], references: [id])
+  uploadedAt     DateTime          @default(now())
+
+  @@index([registrationId])
+  @@index([driveId])
+}
+
+model Voucher {
+  id                    String        @id @default(cuid())
+  driveId               String
+  drive                 Drive         @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  vendor                String
+  certificationTrack    String
+  encryptedCode         String
+  codeHash              String        @unique
+  maskedCode            String
+  value                 Float
+  currency              String        @default("USD")
+  expiryDate            DateTime
+  status                VoucherStatus @default(Available)
+  assignedRegistrationId String?
+  assignedRegistration  Registration? @relation(fields: [assignedRegistrationId], references: [id])
+  assignedEmployeeId    String?
+  deliveryDate          DateTime?
+  readDate              DateTime?
+  redeemDate            DateTime?
+  revokedAt             DateTime?
+  reissueReason         String?
+  createdAt             DateTime      @default(now())
+
+  deliveryTokens VoucherDeliveryToken[]
+  voucherScores  VoucherScore[]
+
+  @@index([driveId])
+  @@index([status])
+  @@index([assignedRegistrationId])
+  @@index([expiryDate])
+}
+
+model VoucherDeliveryToken {
+  id        String   @id @default(cuid())
+  voucherId String
+  voucher   Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([voucherId])
+}
+
+model Communication {
+  id             String                @id @default(cuid())
+  driveId        String
+  drive          Drive                 @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  registrationId String?
+  registration   Registration?         @relation(fields: [registrationId], references: [id])
+  recipientEmail String
+  templateType   CommunicationTemplate
+  subject        String
+  body           String
+  status         CommunicationStatus   @default(Queued)
+  slaDueAt       DateTime?
+  sentAt         DateTime?
+  failureReason  String?
+  createdAt      DateTime              @default(now())
+
+  @@index([driveId])
+  @@index([registrationId])
+  @@index([status])
+  @@index([templateType])
+}
+
+model AutomationRun {
+  id          String              @id @default(cuid())
+  driveId     String?
+  drive       Drive?              @relation(fields: [driveId], references: [id])
+  runType     String
+  status      AutomationRunStatus @default(Running)
+  summaryJson Json?
+  startedAt   DateTime            @default(now())
+  completedAt DateTime?
+  error       String?
+
+  @@index([startedAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  entityType  String
+  entityId    String
+  action      String
+  actorId     String?
+  actor       User?    @relation(fields: [actorId], references: [id])
+  actorName   String
+  timestamp   DateTime @default(now())
+  beforeJson  Json?
+  afterJson   Json?
+  metadataJson Json?
+  ipAddress   String?
+  userAgent   String?
+
+  @@index([entityType, entityId])
+  @@index([timestamp])
+  @@index([actorId])
+}
+
+model ExceptionRecord {
+  id             String            @id @default(cuid())
+  driveId        String?
+  drive          Drive?            @relation(fields: [driveId], references: [id])
+  registrationId String?
+  registration   Registration?     @relation(fields: [registrationId], references: [id])
+  type           ExceptionType
+  severity       ExceptionSeverity @default(Medium)
+  title          String
+  description    String?
+  ownerId        String?
+  owner          User?             @relation("ExceptionOwner", fields: [ownerId], references: [id])
+  status         ExceptionStatus   @default(Open)
+  resolutionNotes String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  resolvedAt     DateTime?
+
+  @@index([status])
+  @@index([type])
+  @@index([severity])
+  @@index([driveId])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// ─── AI Feature Models ────────────────────────────────────────────────────────
+
+model PolicyRule {
+  id             String   @id @default(cuid())
+  driveId        String?
+  drive          Drive?   @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  name           String
+  naturalLanguage String
+  compiledJson   Json
+  version        Int      @default(1)
+  isActive       Boolean  @default(true)
+  createdBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([driveId])
+  @@index([isActive])
+}
+
+model ReadinessAssessment {
+  id              String   @id @default(cuid())
+  registrationId  String   @unique
+  registration    Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  readinessScore  Int
+  weakTopics      Json
+  preparationPlan Json
+  mockQuestions    Json
+  recommendation  String
+  aiSummary       String?
+  assessedAt      DateTime @default(now())
+
+  @@index([registrationId])
+  @@index([readinessScore])
+}
+
+model VoucherScore {
+  id                  String   @id @default(cuid())
+  registrationId      String
+  registration        Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  voucherId           String?
+  voucher             Voucher? @relation(fields: [voucherId], references: [id], onDelete: SetNull)
+  likelihoodScore     Int
+  riskFactors         Json
+  explanation         String
+  recommendation      String
+  scoredAt            DateTime @default(now())
+
+  @@index([registrationId])
+  @@index([likelihoodScore])
+}
+
+model AgentActivity {
+  id          String   @id @default(cuid())
+  agentType   String
+  action      String
+  entityType  String?
+  entityId    String?
+  input       Json?
+  output      Json?
+  reasoning   String?
+  riskLevel   String   @default("low")
+  status      String   @default("pending")
+  approvedBy  String?
+  createdAt   DateTime @default(now())
+
+  @@index([agentType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CertificationPassport {
+  id              String   @id @default(cuid())
+  registrationId  String   @unique
+  registration    Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  passportJson    Json
+  aiSummary       String
+  nextActions     Json
+  generatedAt     DateTime @default(now())
+
+  @@index([registrationId])
+}
+
+model DemandForecast {
+  id              String   @id @default(cuid())
+  projectId       String?
+  projectName     String
+  skillGaps       Json
+  recommendedTracks Json
+  candidateCount  Int
+  timeline        String?
+  confidenceScore Int?
+  aiAnalysis      String?
+  createdAt       DateTime @default(now())
+
+  @@index([projectName])
+}
+
+model ROIMetric {
+  id              String   @id @default(cuid())
+  registrationId  String
+  registration    Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  voucherCost     Float
+  projectRevenue  Float?
+  roiPercent      Float?
+  deploymentStatus String?
+  trackedAt       DateTime @default(now())
+
+  @@index([registrationId])
+  @@index([roiPercent])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  type        String
+  severity    String   @default("info")
+  href        String
+  icon        String   @default("Bell")
+  color       String   @default("text-slate-500")
+  bgColor     String   @default("bg-slate-50")
+  read        Boolean  @default(false)
+  userId      String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
