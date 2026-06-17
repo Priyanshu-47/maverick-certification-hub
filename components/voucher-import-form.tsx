@@ -12,6 +12,7 @@ export function VoucherImportForm({ drives, defaultDriveId }: { drives: Drive[];
   const [fileName, setFileName] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,14 +28,15 @@ export function VoucherImportForm({ drives, defaultDriveId }: { drives: Drive[];
     e.preventDefault();
     setPending(true);
     setError("");
+    setSuccess("");
     try {
       const form = e.currentTarget;
       const formData = new FormData(form);
       formData.set("codes", codes);
-      await importVouchersAction(formData);
-      // redirect() handles navigation — nothing after this runs on success
+      const result = await importVouchersAction(formData);
+      setSuccess(`Imported ${result?.count ?? "?"} vouchers! Refreshing...`);
+      window.location.href = "/vouchers?driveId=" + (result?.driveId ?? "");
     } catch (err: any) {
-      if (err?.message?.includes("NEXT_REDIRECT")) throw err; // let redirect propagate
       setError(err?.message || "Import failed");
       setPending(false);
     }
@@ -93,6 +95,7 @@ export function VoucherImportForm({ drives, defaultDriveId }: { drives: Drive[];
         />
       </div>
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+      {success && <p className="text-sm font-medium text-green-600">{success}</p>}
       <Button type="submit" disabled={pending || !codes.trim()}>
         {pending ? "Importing..." : "Import Vouchers"}
       </Button>
