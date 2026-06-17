@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { importResultsAction } from "@/lib/actions";
-import { Button, Label, Select, Textarea } from "@/components/ui";
+import { Button, Label, Textarea } from "@/components/ui";
 import { Upload, FileText } from "lucide-react";
 
 type Drive = { id: string; name: string };
@@ -12,45 +12,42 @@ export function AssessmentImportForm({ drives, defaultDriveId }: { drives: Drive
   const [csvText, setCsvText] = useState("");
   const [fileName, setFileName] = useState("");
   const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setFileName(file.name);
     const reader = new FileReader();
-    reader.onload = () => {
-      setCsvText(reader.result as string);
-    };
+    reader.onload = () => setCsvText(reader.result as string);
     reader.readAsText(file);
   };
 
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setPending(true);
-    setMessage("");
+    setError("");
     try {
+      const form = e.currentTarget;
+      const formData = new FormData(form);
       formData.set("csvText", csvText);
       await importResultsAction(formData);
-      setMessage("Results imported successfully! Table refreshing...");
-      setCsvText("");
-      setFileName("");
-      if (fileRef.current) fileRef.current.value = "";
-      router.refresh();
-    } catch (e) {
-      setMessage("Error: " + String(e));
+      // redirect() handles navigation — nothing after this runs on success
+    } catch (err: any) {
+      if (err?.message?.includes("NEXT_REDIRECT")) throw err; // let redirect propagate
+      setError(err?.message || "Import failed");
+      setPending(false);
     }
-    setPending(false);
   };
 
   return (
-    <form action={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="driveId">Drive</Label>
-        <Select id="driveId" name="driveId" defaultValue={defaultDriveId}>
+        <Label>Drive</Label>
+        <select name="driveId" defaultValue={defaultDriveId} className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm">
           {drives.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-        </Select>
+        </select>
       </div>
       <div>
         <Label>Upload CSV File</Label>
@@ -75,12 +72,10 @@ export function AssessmentImportForm({ drives, defaultDriveId }: { drives: Drive
           rows={6}
           value={csvText}
           onChange={(e) => setCsvText(e.target.value)}
-          placeholder="EMP101, 85, yes&#10;EMP102, 62, yes&#10;EMP103, 45, no"
+          placeholder={"EMP101, 85, yes\nEMP102, 62, yes\nEMP103, 45, no"}
         />
       </div>
-      {message && (
-        <p className={`text-sm ${message.startsWith("Error") ? "text-red-600" : "text-green-600"}`}>{message}</p>
-      )}
+      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
       <Button type="submit" disabled={pending || !csvText.trim()}>
         {pending ? "Importing..." : "Import Results"}
       </Button>

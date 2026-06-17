@@ -7,7 +7,7 @@ import { AssessmentImportForm } from "@/components/assessment-import-form";
 
 export default async function AssessmentsPage({ searchParams }: { searchParams: { driveId?: string } }) {
   const drives = await prisma.drive.findMany({ select: { id: true, name: true } });
-  const driveId = searchParams.driveId ?? drives[0]?.id;
+  const driveId = searchParams.driveId;
 
   const results = await prisma.assessmentResult.findMany({
     where: driveId ? { driveId } : {},

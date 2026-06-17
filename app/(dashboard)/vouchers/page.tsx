@@ -5,10 +5,11 @@ import { Button } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { Ticket, AlertTriangle } from "lucide-react";
 import { VoucherImportForm } from "@/components/voucher-import-form";
+import Link from "next/link";
 
 export default async function VouchersPage({ searchParams }: { searchParams: { driveId?: string } }) {
   const drives = await prisma.drive.findMany({ select: { id: true, name: true, tracks: true } });
-  const driveId = searchParams.driveId ?? drives[0]?.id;
+  const driveId = searchParams.driveId;
 
   const vouchers = await prisma.voucher.findMany({
     where: driveId ? { driveId } : {},
@@ -17,9 +18,13 @@ export default async function VouchersPage({ searchParams }: { searchParams: { d
     take: 100,
   });
 
-  const available = vouchers.filter((v) => v.status === "Available").length;
-  const issued = vouchers.filter((v) => v.status === "Issued").length;
-  const redeemed = vouchers.filter((v) => v.status === "Redeemed").length;
+  const allVouchers = await prisma.voucher.findMany({
+    select: { status: true, driveId: true },
+  });
+
+  const available = allVouchers.filter((v) => v.status === "Available").length;
+  const issued = allVouchers.filter((v) => v.status === "Issued").length;
+  const redeemed = allVouchers.filter((v) => v.status === "Redeemed").length;
   const lowStock = available < 5;
 
   const passedRegs = await prisma.registration.findMany({
@@ -41,13 +46,24 @@ export default async function VouchersPage({ searchParams }: { searchParams: { d
         <MetricCard title="Available" value={available} icon={Ticket} variant="success" />
         <MetricCard title="Issued" value={issued} icon={Ticket} />
         <MetricCard title="Redeemed" value={redeemed} icon={Ticket} variant="success" />
-        <MetricCard title="Total" value={vouchers.length} icon={Ticket} />
+        <MetricCard title="Total" value={allVouchers.length} icon={Ticket} />
+      </div>
+
+      <div className="flex gap-2 mb-6 flex-wrap">
+        <Link href="/vouchers">
+          <Button variant={!driveId ? "default" : "outline"} size="sm">All Drives</Button>
+        </Link>
+        {drives.map((d) => (
+          <Link key={d.id} href={`/vouchers?driveId=${d.id}`}>
+            <Button variant={driveId === d.id ? "default" : "outline"} size="sm">{d.name}</Button>
+          </Link>
+        ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3 mb-8">
         <div className="lg:col-span-2 rounded-xl border bg-white p-6 card-shadow">
           <h3 className="font-semibold mb-4">Import Vouchers</h3>
-          <VoucherImportForm drives={drives} defaultDriveId={driveId ?? ""} />
+          <VoucherImportForm drives={drives} defaultDriveId={driveId ?? drives[0]?.id ?? ""} />
         </div>
 
         <div className="rounded-xl border bg-white p-6 card-shadow">
@@ -65,23 +81,33 @@ export default async function VouchersPage({ searchParams }: { searchParams: { d
         </div>
       </div>
 
-      <DataTable
-        data={vouchers as unknown as Record<string, unknown>[]}
-        columns={[
-          { key: "maskedCode", label: "Code (Masked)" },
-          { key: "vendor", label: "Vendor" },
-          { key: "certificationTrack", label: "Track" },
-          { key: "status", label: "Status", render: (r) => <StatusBadge status={String(r.status)} /> },
-          { key: "assigned", label: "Assigned To", render: (r) => String((r.assignedRegistration as { candidateName: string })?.candidateName ?? "—") },
-          { key: "value", label: "Value", render: (r) => `$${r.value}` },
-          { key: "expiryDate", label: "Expires", render: (r) => formatDate(r.expiryDate as string) },
-          { key: "actions", label: "", render: (r) => r.status === "Issued" ? (
-            <form action={async () => { "use server"; await redeemVoucherAction(String(r.id)); }}>
-              <Button type="submit" size="sm" variant="outline">Mark Redeemed</Button>
-            </form>
-          ) : null },
-        ]}
-      />
+      {vouchers.length === 0 && (
+        <div className="rounded-xl border bg-white p-8 text-center card-shadow mb-6">
+          <Ticket className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+          <p className="text-slate-500 font-medium">No vouchers {driveId ? "for this drive" : "found"}</p>
+          <p className="text-sm text-slate-400 mt-1">Import vouchers above or select a different drive</p>
+        </div>
+      )}
+
+      {vouchers.length > 0 && (
+        <DataTable
+          data={vouchers as unknown as Record<string, unknown>[]}
+          columns={[
+            { key: "maskedCode", label: "Code (Masked)" },
+            { key: "vendor", label: "Vendor" },
+            { key: "certificationTrack", label: "Track" },
+            { key: "status", label: "Status", render: (r) => <StatusBadge status={String(r.status)} /> },
+            { key: "assigned", label: "Assigned To", render: (r) => String((r.assignedRegistration as { candidateName: string })?.candidateName ?? "—") },
+            { key: "value", label: "Value", render: (r) => `$${r.value}` },
+            { key: "expiryDate", label: "Expires", render: (r) => formatDate(r.expiryDate as string) },
+            { key: "actions", label: "", render: (r) => r.status === "Issued" ? (
+              <form action={async () => { "use server"; await redeemVoucherAction(String(r.id)); }}>
+                <Button type="submit" size="sm" variant="outline">Mark Redeemed</Button>
+              </form>
+            ) : null },
+          ]}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { importVouchersAction } from "@/lib/actions";
 import { Button, Input, Label, Select, Textarea } from "@/components/ui";
 import { Upload, FileText } from "lucide-react";
@@ -12,54 +11,51 @@ export function VoucherImportForm({ drives, defaultDriveId }: { drives: Drive[];
   const [codes, setCodes] = useState("");
   const [fileName, setFileName] = useState("");
   const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setFileName(file.name);
     const reader = new FileReader();
-    reader.onload = () => {
-      setCodes(reader.result as string);
-    };
+    reader.onload = () => setCodes(reader.result as string);
     reader.readAsText(file);
   };
 
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setPending(true);
-    setMessage("");
+    setError("");
     try {
+      const form = e.currentTarget;
+      const formData = new FormData(form);
       formData.set("codes", codes);
       await importVouchersAction(formData);
-      setMessage("Vouchers imported successfully! Table refreshing...");
-      setCodes("");
-      setFileName("");
-      if (fileRef.current) fileRef.current.value = "";
-      router.refresh();
-    } catch (e) {
-      setMessage("Error: " + String(e));
+      // redirect() handles navigation — nothing after this runs on success
+    } catch (err: any) {
+      if (err?.message?.includes("NEXT_REDIRECT")) throw err; // let redirect propagate
+      setError(err?.message || "Import failed");
+      setPending(false);
     }
-    setPending(false);
   };
 
   return (
-    <form action={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="driveId">Drive</Label>
-          <Select id="driveId" name="driveId" defaultValue={defaultDriveId}>
+          <Label>Drive</Label>
+          <select name="driveId" defaultValue={defaultDriveId} className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm">
             {drives.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </Select>
+          </select>
         </div>
         <div>
           <Label htmlFor="vendor">Vendor</Label>
-          <Input id="vendor" name="vendor" required placeholder="Microsoft" />
+          <Input id="vendor" name="vendor" required placeholder="Microsoft" defaultValue="Microsoft" />
         </div>
         <div>
           <Label htmlFor="certificationTrack">Track</Label>
-          <Select id="certificationTrack" name="certificationTrack">
+          <Select id="certificationTrack" name="certificationTrack" defaultValue={drives[0]?.tracks[0] ?? "Azure Administrator"}>
             {(drives[0]?.tracks ?? ["Azure Administrator"]).map((t) => <option key={t} value={t}>{t}</option>)}
           </Select>
         </div>
@@ -69,7 +65,7 @@ export function VoucherImportForm({ drives, defaultDriveId }: { drives: Drive[];
         </div>
         <div>
           <Label htmlFor="expiryDate">Expiry Date</Label>
-          <Input id="expiryDate" name="expiryDate" type="date" required />
+          <Input id="expiryDate" name="expiryDate" type="date" required defaultValue="2026-12-31" />
         </div>
       </div>
       <div>
@@ -93,12 +89,10 @@ export function VoucherImportForm({ drives, defaultDriveId }: { drives: Drive[];
           rows={4}
           value={codes}
           onChange={(e) => setCodes(e.target.value)}
-          placeholder="MS-AZ-001&#10;MS-AZ-002&#10;MS-AZ-003"
+          placeholder={"MS-AZ-001\nMS-AZ-002\nMS-AZ-003"}
         />
       </div>
-      {message && (
-        <p className={`text-sm ${message.startsWith("Error") ? "text-red-600" : "text-green-600"}`}>{message}</p>
-      )}
+      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
       <Button type="submit" disabled={pending || !codes.trim()}>
         {pending ? "Importing..." : "Import Vouchers"}
       </Button>

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getSession } from "./auth";
 import * as S from "./services";
 import { prisma } from "./db";
@@ -158,18 +159,19 @@ export async function approvalAction(formData: FormData) {
 export async function importResultsAction(formData: FormData) {
   const raw = Object.fromEntries(formData);
   const parsed = resultImportSchema.safeParse(raw);
-  if (!parsed.success) return { error: "Invalid input" };
+  if (!parsed.success) throw new Error("Invalid input: " + parsed.error.issues.map(i => i.message).join(", "));
   const a = await actor();
   const results = await S.importResults(parsed.data.driveId, parsed.data.csvText, a);
   revalidatePath("/assessments");
-  return { success: true, count: results.length };
+  redirect("/assessments?driveId=" + parsed.data.driveId);
 }
 
 export async function importVouchersAction(formData: FormData) {
   const raw = Object.fromEntries(formData);
   const codes = String(raw.codes).split("\n").filter(Boolean);
+  if (codes.length === 0) throw new Error("No voucher codes provided");
   const parsed = voucherBulkSchema.safeParse({ ...raw, codes: String(raw.codes) });
-  if (!parsed.success) return { error: "Invalid input" };
+  if (!parsed.success) throw new Error("Invalid input: " + parsed.error.issues.map(i => i.message).join(", "));
   const a = await actor();
   const created = await S.importVouchers({
     driveId: parsed.data.driveId,
@@ -181,7 +183,7 @@ export async function importVouchersAction(formData: FormData) {
     expiryDate: new Date(parsed.data.expiryDate),
   }, a);
   revalidatePath("/vouchers");
-  return { success: true, count: created.length };
+  redirect("/vouchers?driveId=" + parsed.data.driveId);
 }
 
 export async function allocateVoucherAction(registrationId: string) {
