@@ -133,7 +133,7 @@ export async function generateROIReport(driveId?: string): Promise<ROIReport> {
       `Deployment rate: ${deploymentRate}% of registered candidates reached voucher stage. ` +
       `Top certification track: ${topTrack?.track ?? "N/A"} with ${topTrack?.count ?? 0} certifications. ` +
       `Recommendation: Focus on ${profitabilityByBU.sort((a, b) => b.roi - a.roi)[0]?.bu ?? "highest ROI"} business unit for maximum return.${
-        isAIConfigured() ? "" : " (Rule-based analysis — configure Azure OpenAI for AI-driven ROI insights)"
+        isAIConfigured() ? "" : " (Rule-based analysis — configure AWS Bedrock for AI-driven ROI insights)"
       }`;
   }
 

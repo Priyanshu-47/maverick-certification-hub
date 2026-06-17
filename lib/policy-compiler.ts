@@ -194,7 +194,7 @@ function compileWithFallback(
     rules,
     reasoningTree,
     explanation: `Compiled ${rules.length} rule(s) from natural language. ${
-      isAIConfigured() ? "" : "(Rule-based fallback — configure Azure OpenAI for full AI compilation)"
+      isAIConfigured() ? "" : "(Rule-based fallback — configure AWS Bedrock for full AI compilation)"
     }`,
     version: 1,
   };

@@ -101,8 +101,8 @@ export default function CertificationAIPage() {
         scoreVoucherAction(regId.trim()),
       ]);
       if (p.error) setError(p.error); else setPassport(p as unknown as PassportData);
-      if (r.success) setReadiness(r as unknown as ReadinessResult);
-      if (v.success) setVoucherScore(v as unknown as VoucherScoreResult);
+      if (!r.error) setReadiness(r as unknown as ReadinessResult); else setError(r.error);
+      if (!v.error) setVoucherScore(v as unknown as VoucherScoreResult); else setError(v.error);
     } catch { setError("Failed to generate passport"); }
     setLoading(false);
   };

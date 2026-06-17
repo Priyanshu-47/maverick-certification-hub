@@ -130,7 +130,7 @@ function analyzeWithFallback(input: {
         ? `CRITICAL: ${skillGaps.filter((g) => g.priority === "Critical").map((g) => g.skill).join(", ")} have severe gaps requiring immediate action.`
         : "No critical gaps detected."
     } Recommend launching certification drives for the top skill gaps with an estimated ${Math.ceil(totalGap * 1.3)} candidate pipeline to account for attrition.${
-      isAIConfigured() ? "" : " (Rule-based analysis — configure Azure OpenAI for full AI-driven demand intelligence)"
+      isAIConfigured() ? "" : " (Rule-based analysis — configure AWS Bedrock for full AI-driven demand intelligence)"
     }`,
   };
 }

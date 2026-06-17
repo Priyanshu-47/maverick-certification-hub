@@ -165,7 +165,7 @@ function assessWithFallback(context: Record<string, unknown>): ReadinessResult {
       recommendation === "Issue" ? "Ready to receive voucher." :
       recommendation === "Hold" ? "Needs additional preparation before voucher issuance." :
       "Should reattempt training before certification."
-    }${isAIConfigured() ? "" : " (Rule-based assessment — configure Azure OpenAI for full AI coaching)"}`,
+    }${isAIConfigured() ? "" : " (Rule-based assessment — configure AWS Bedrock for full AI coaching)"}`,
   };
 }
 

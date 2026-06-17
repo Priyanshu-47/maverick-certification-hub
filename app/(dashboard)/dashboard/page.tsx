@@ -10,7 +10,7 @@ import { getDashboardMetrics, getFunnelData, getRecentAuditLogs, getRiskItems, g
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Button } from "@/components/ui";
-import { isAIConfigured } from "@/lib/ai";
+import { isAIConfigured, getAIProvider } from "@/lib/ai";
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -122,7 +122,7 @@ export default async function DashboardPage() {
           <Brain className="w-5 h-5" />
           AI Engine Status
           <span className={`text-xs px-2 py-0.5 rounded-full ${isAIConfigured() ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-            {isAIConfigured() ? "Azure OpenAI Connected" : "Rule-Based Fallback"}
+            {isAIConfigured() ? `AWS Bedrock ${getAIProvider() === "bedrock" ? "(Nova Pro)" : "Connected"}` : "Rule-Based Fallback"}
           </span>
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

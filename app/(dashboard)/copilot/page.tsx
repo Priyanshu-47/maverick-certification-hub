@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useRef } from "react";
 import {
   Bot, Play, Check, X, Clock, Shield, Ticket, Mail, TrendingUp, RefreshCw,
-  AlertCircle, FileText, Zap, MessageSquare, Upload, GitCompare, LiveIndicator,
+  AlertCircle, FileText, Zap, MessageSquare, Upload, GitCompare,
   Send, Mic, MicOff,
 } from "lucide-react";
 import { Card, Button, Badge } from "@/components/ui";
@@ -68,7 +68,8 @@ export default function CopilotPage() {
     setChatMessages((p) => [...p, { role: "user", content: msg, timestamp: new Date() }]);
     setChatLoading(true);
     const r = await chatAction(msg);
-    setChatMessages((p) => [...p, { role: "assistant", content: r.success ? r.message : r.error || "Error", timestamp: new Date() }]);
+    const chatContent = "message" in r && r.success ? (r as any).message : ("error" in r ? (r as any).error : "Error");
+    setChatMessages((p) => [...p, { role: "assistant", content: chatContent, timestamp: new Date() }]);
     setChatLoading(false);
   };
 

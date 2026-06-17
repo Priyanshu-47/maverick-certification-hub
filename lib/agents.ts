@@ -99,7 +99,7 @@ export async function runAgent(
       action,
       entityType: context.entityType as string ?? "Unknown",
       entityId: context.entityId as string ?? "",
-      input: context,
+      input: context as any,
       output,
       reasoning,
       riskLevel,

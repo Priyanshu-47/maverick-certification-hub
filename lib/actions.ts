@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSession } from "./auth";
 import * as S from "./services";
+import { prisma } from "./db";
 import { driveSchema, registrationSchema, approvalActionSchema, voucherBulkSchema, resultImportSchema } from "./validators";
 
 async function actor() {
@@ -125,7 +126,7 @@ export async function createRegistrationAction(formData: FormData) {
     revalidatePath("/registrations");
     return { success: true, registrationId: reg.id };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -191,7 +192,7 @@ export async function allocateVoucherAction(registrationId: string) {
     revalidatePath(`/registrations/${registrationId}`);
     return { success: true };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -257,7 +258,7 @@ export async function compilePolicyAction(naturalLanguage: string, driveId?: str
     const result = await compileNLRules(naturalLanguage, driveId);
     return { success: true, ...result };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -267,7 +268,7 @@ export async function scoreVoucherAction(registrationId: string) {
     const result = await scoreVoucherAllocation(registrationId);
     return { success: true, ...result };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -277,7 +278,7 @@ export async function assessReadinessAction(registrationId: string) {
     const result = await assessReadiness(registrationId);
     return { success: true, ...result };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -291,7 +292,7 @@ export async function analyzeDemandAction(input: {
     const result = await analyzeDemand(input);
     return { success: true, ...result };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -301,7 +302,7 @@ export async function generatePassportAction(registrationId: string) {
     const result = await generatePassport(registrationId);
     return { success: true, ...result };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -311,7 +312,7 @@ export async function generateROIReportAction(driveId?: string) {
     const result = await generateROIReport(driveId);
     return { success: true, ...result };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -331,7 +332,7 @@ export async function orchestrateDriveAction(driveId?: string) {
     const actions = await orchestrateDrive(id);
     return { success: true, actions };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -365,7 +366,7 @@ export async function analyzeDocumentAction(fileName: string, fileContent: strin
     const result = await analyzeDocument(fileName, fileContent);
     return { success: true, ...result };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -383,7 +384,7 @@ export async function runABTestAction(policyAId: string, policyBId: string, driv
     const result = await runABTest(policyAId, policyBId, driveId);
     return { success: true, ...result };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -393,7 +394,7 @@ export async function liveEvaluateAction(registrationId: string, policyId?: stri
     const result = await liveEvaluateCandidate(registrationId, policyId);
     return { success: true, ...result };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }
 
@@ -410,6 +411,6 @@ export async function chatAction(message: string, sessionId?: string) {
     addToConversation(sid, { role: "assistant", content: result.message, timestamp: new Date() });
     return { success: true, ...result, history: getConversationHistory(sid) };
   } catch (e) {
-    return { error: String(e) };
+    return { success: false, error: String(e) };
   }
 }

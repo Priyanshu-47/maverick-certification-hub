@@ -162,7 +162,7 @@ function passportFallback(context: Record<string, unknown>): { aiSummary: string
   const summary = `${name} is pursuing ${track} certification. Eligibility: ${outcome}. Assessment: ${assessment}. Voucher: ${voucher}. ${
     context.trainingCompleted ? "Training completed." : "Training pending."
   }${context.readinessScore ? ` Readiness score: ${context.readinessScore}/100.` : ""}${
-    isAIConfigured() ? "" : " (Rule-based summary — configure Azure OpenAI for AI-generated summaries)"
+    isAIConfigured() ? "" : " (Rule-based summary — configure AWS Bedrock for AI-generated summaries)"
   }`;
 
   const actions: string[] = [];

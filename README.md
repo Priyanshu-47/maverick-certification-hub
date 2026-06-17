@@ -130,7 +130,7 @@ lib/
    security.ts           # Encryption, hashing, RBAC
    adapters.ts           # Email, SharePoint, HRIS, LMS mocks
    audit.ts              # Append-only audit logging
-   ai.ts                 # Azure OpenAI client + cost tracking
+    ai.ts                 # AWS Bedrock (Nova Pro) client + cost tracking
    policy-compiler.ts    # NL Policy Compiler (GenAI)
    voucher-intelligence.ts # Voucher scoring engine (GenAI)
    readiness-coach.ts    # AI Pre-Voucher Readiness Coach
@@ -162,7 +162,7 @@ prisma/
 ### NL Policy Compiler (`lib/policy-compiler.ts`)
 L&D managers type eligibility rules in natural English. The AI compiles them into executable, versioned rules with a visual glass-box reasoning tree for every decision.
 - **Route:** `/copilot` → NL Policy Compiler tab
-- **Fallback:** Rule-based extraction when Azure OpenAI is not configured
+- **Fallback:** Rule-based extraction when AWS Bedrock is not configured
 
 ### Voucher Intelligence Engine (`lib/voucher-intelligence.ts`)
 Scores every voucher allocation request on Likelihood of Productive Use (0-100). Blocks leakage before it happens, explains decisions in plain English, and auto-reclaims unused vouchers.
