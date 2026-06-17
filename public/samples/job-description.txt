@@ -1,0 +1,43 @@
+Job Description: Senior Cloud Solutions Architect
+
+Department: Cloud Engineering
+Location: Remote / Hybrid
+Reports to: VP of Cloud Infrastructure
+
+Role Summary:
+We are seeking an experienced Senior Cloud Solutions Architect to lead the design and implementation of enterprise-scale Azure solutions. This role requires deep expertise in cloud architecture, security, and cost optimization.
+
+Required Certifications:
+- Microsoft Certified: Azure Solutions Architect Expert (AZ-305) - Mandatory
+- Microsoft Certified: Azure Administrator Associate (AZ-104) - Mandatory
+- AWS Certified Solutions Architect - Professional (nice to have)
+
+Technical Skills Required:
+- Azure Virtual Networks, VNet Peering, ExpressRoute
+- Azure Active Directory, Conditional Access, PIM
+- Azure Resource Manager, Bicep, Terraform
+- Azure Kubernetes Service (AKS), Docker, Helm
+- Azure Data Factory, Synapse Analytics
+- Power Platform (Power Apps, Power Automate, Power BI)
+- DevOps practices: CI/CD with Azure DevOps and GitHub Actions
+- Security: Microsoft Defender for Cloud, Sentinel SIEM
+- Cost Management: Azure Cost Management, Reserved Instances
+
+Soft Skills:
+- Strong communication and presentation skills
+- Ability to translate business requirements into technical solutions
+- Experience with stakeholder management
+- Mentoring junior engineers
+
+Experience:
+- 7+ years in cloud engineering or architecture roles
+- 3+ years specifically with Microsoft Azure
+- Proven track record of designing enterprise-scale solutions
+- Experience with multi-cloud environments is a plus
+
+Compensation:
+- Base salary: $150,000 - $180,000 USD
+- Annual certification bonus: $5,000 per active certification
+- Training budget: $10,000 per year
+
+We value candidates who demonstrate continuous learning through active certifications and hands-on experience with cloud platforms.

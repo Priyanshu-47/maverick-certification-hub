@@ -238,6 +238,11 @@ export default function CopilotPage() {
           <Card className="p-4">
             <h3 className="font-semibold mb-2 flex items-center gap-2"><Upload className="w-5 h-5" />Document Intelligence (RAG)</h3>
             <p className="text-sm text-gray-500 mb-3">Upload RFPs, SOWs, job descriptions. AI extracts certification requirements.</p>
+            <div className="flex flex-wrap gap-2 mb-3 text-xs">
+              <span className="text-gray-400">Try these samples:</span>
+              <a href="/samples/project-requirements.txt" download className="text-blue-600 underline hover:text-blue-800">Project Requirements</a>
+              <a href="/samples/job-description.txt" download className="text-blue-600 underline hover:text-blue-800">Job Description</a>
+            </div>
             <div className="flex items-center gap-3">
               <input type="file" accept=".txt,.md,.csv,.json" onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)} className="flex-1 text-sm" />
               <Button onClick={handleUpload} disabled={!uploadFile || isPending}>{isPending ? "Analyzing..." : "Analyze Document"}</Button>

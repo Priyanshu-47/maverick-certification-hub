@@ -79,7 +79,7 @@ export default async function VouchersPage({ searchParams }: { searchParams: { d
               </div>
             </div>
             <div>
-              <Label htmlFor="codes">Voucher Codes (one per line)</Label>
+              <Label htmlFor="codes">Voucher Codes (one per line) <a href="/samples/voucher-codes.txt" download className="text-blue-600 underline hover:text-blue-800 text-xs font-normal">Download sample</a></Label>
               <Textarea id="codes" name="codes" rows={4} placeholder="MS-AZ-001&#10;MS-AZ-002" />
             </div>
             <Button type="submit">Import Vouchers</Button>

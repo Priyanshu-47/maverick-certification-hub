@@ -32,7 +32,7 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
       <div className="grid gap-6 lg:grid-cols-2 mb-8">
         <div className="rounded-xl border bg-white p-6 card-shadow">
           <h3 className="font-semibold mb-4">Import Results (CSV)</h3>
-          <p className="text-sm text-slate-500 mb-4">Format: employeeId, score, attended (yes/no) — one per line</p>
+          <p className="text-sm text-slate-500 mb-4">Format: employeeId, score, attended (yes/no) — one per line. <a href="/samples/assessment-results.csv" download className="text-blue-600 underline hover:text-blue-800">Download sample CSV</a></p>
           <form action={importResults} className="space-y-4">
             <div>
               <Label htmlFor="driveId">Drive</Label>

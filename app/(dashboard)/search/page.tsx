@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Search as SearchIcon, FolderKanban, Users, Ticket, ArrowRight } from "lucide-react";
@@ -23,6 +23,17 @@ export default function SearchPage() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isPending, startTransition] = useTransition();
   const [searched, setSearched] = useState(!!initialQuery);
+
+  useEffect(() => {
+    if (initialQuery.trim()) {
+      setSearched(true);
+      startTransition(async () => {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(initialQuery.trim())}`);
+        const data = await res.json();
+        setResults(data.results || []);
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
