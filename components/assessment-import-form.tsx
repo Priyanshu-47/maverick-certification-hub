@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { importResultsAction, scheduleAssessmentAction } from "@/lib/actions";
+import { useRouter } from "next/navigation";
+import { importResultsAction } from "@/lib/actions";
 import { Button, Label, Select, Textarea } from "@/components/ui";
 import { Upload, FileText } from "lucide-react";
 
@@ -13,6 +14,7 @@ export function AssessmentImportForm({ drives, defaultDriveId }: { drives: Drive
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,10 +33,11 @@ export function AssessmentImportForm({ drives, defaultDriveId }: { drives: Drive
     try {
       formData.set("csvText", csvText);
       await importResultsAction(formData);
-      setMessage("Results imported successfully!");
+      setMessage("Results imported successfully! Table refreshing...");
       setCsvText("");
       setFileName("");
       if (fileRef.current) fileRef.current.value = "";
+      router.refresh();
     } catch (e) {
       setMessage("Error: " + String(e));
     }

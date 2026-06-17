@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { importVouchersAction } from "@/lib/actions";
 import { Button, Input, Label, Select, Textarea } from "@/components/ui";
 import { Upload, FileText } from "lucide-react";
@@ -13,6 +14,7 @@ export function VoucherImportForm({ drives, defaultDriveId }: { drives: Drive[];
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,10 +33,11 @@ export function VoucherImportForm({ drives, defaultDriveId }: { drives: Drive[];
     try {
       formData.set("codes", codes);
       await importVouchersAction(formData);
-      setMessage("Vouchers imported successfully!");
+      setMessage("Vouchers imported successfully! Table refreshing...");
       setCodes("");
       setFileName("");
       if (fileRef.current) fileRef.current.value = "";
+      router.refresh();
     } catch (e) {
       setMessage("Error: " + String(e));
     }
