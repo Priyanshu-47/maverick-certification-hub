@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/db";
-import { importResultsAction, scheduleAssessmentAction } from "@/lib/actions";
-import { PageHeader, StatusBadge, DataTable, FormSection } from "@/components/shared";
-import { Button, Input, Label, Select, Textarea } from "@/components/ui";
+import { scheduleAssessmentAction } from "@/lib/actions";
+import { PageHeader, StatusBadge, DataTable } from "@/components/shared";
+import { Button } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { AssessmentImportForm } from "@/components/assessment-import-form";
 
 export default async function AssessmentsPage({ searchParams }: { searchParams: { driveId?: string } }) {
   const drives = await prisma.drive.findMany({ select: { id: true, name: true } });
@@ -20,32 +21,20 @@ export default async function AssessmentsPage({ searchParams }: { searchParams: 
     take: 20,
   });
 
-  async function importResults(formData: FormData) {
-    "use server";
-    await importResultsAction(formData);
-  }
-
   return (
     <div>
       <PageHeader title="Assessments & Results" description="Schedule candidates and import assessment results" />
 
       <div className="grid gap-6 lg:grid-cols-2 mb-8">
         <div className="rounded-xl border bg-white p-6 card-shadow">
-          <h3 className="font-semibold mb-4">Import Results (CSV)</h3>
-          <p className="text-sm text-slate-500 mb-4">Format: employeeId, score, attended (yes/no) — one per line. <a href="/samples/assessment-results.csv" download className="text-blue-600 underline hover:text-blue-800">Download sample CSV</a></p>
-          <form action={importResults} className="space-y-4">
-            <div>
-              <Label htmlFor="driveId">Drive</Label>
-              <Select id="driveId" name="driveId" defaultValue={driveId}>
-                {drives.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="csvText">Results Data</Label>
-              <Textarea id="csvText" name="csvText" rows={6} placeholder="EMP101, 85, yes&#10;EMP102, 62, yes&#10;EMP103, 45, no" />
-            </div>
-            <Button type="submit">Import Results</Button>
-          </form>
+          <h3 className="font-semibold mb-2">Import Results (CSV)</h3>
+          <p className="text-sm text-slate-500 mb-4">
+            Format: employeeId, score, attended (yes/no) — one per line.{" "}
+            <a href="/samples/assessment-results.csv" download className="text-blue-600 underline hover:text-blue-800">
+              Download sample CSV
+            </a>
+          </p>
+          <AssessmentImportForm drives={drives} defaultDriveId={driveId ?? ""} />
         </div>
 
         <div className="rounded-xl border bg-white p-6 card-shadow">
